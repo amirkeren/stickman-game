@@ -212,6 +212,7 @@ const GRAVITY = 28;
 const JUMP_VELOCITY = 10;
 const WALK_SPEED = 4.5;
 const PUSH_APART_DIST = 0.7;
+const HIPS_HEIGHT = 0.82;  // crouched fighting stance (was 0.95 upright)
 const ROUND_TIME = 60;
 const ROUNDS_TO_WIN = 2;
 
@@ -262,12 +263,12 @@ const dirLight = new THREE.DirectionalLight(0xffeedd, 1.0);
 dirLight.position.set(5, 10, 7);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.set(isTouchDevice ? 512 : 1024, isTouchDevice ? 512 : 1024);
-dirLight.shadow.camera.left = -12;
-dirLight.shadow.camera.right = 12;
-dirLight.shadow.camera.top = 8;
-dirLight.shadow.camera.bottom = -2;
+dirLight.shadow.camera.left = -20;
+dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 10;
+dirLight.shadow.camera.bottom = -4;
 dirLight.shadow.camera.near = 1;
-dirLight.shadow.camera.far = 25;
+dirLight.shadow.camera.far = 30;
 scene.add(dirLight);
 
 // Arena base (hidden beneath textured floor)
@@ -343,7 +344,7 @@ function createStickman(color) {
 
   // Hips
   const hips = new THREE.Group();
-  hips.position.y = 0.95;
+  hips.position.y = HIPS_HEIGHT;
   root.add(hips);
 
   // Torso
@@ -469,34 +470,40 @@ const POSES = {
     leftElbow:     { x: -0.5 },
     rightShoulder: { x: -0.6, z: -0.5 },
     rightElbow:    { x: -1.2 },
-    leftHip:       { x: 0.05 },
-    leftKnee:      { x: 0 },
-    rightHip:      { x: -0.15 },
-    rightKnee:     { x: 0.3 },
-    chest:         { x: -0.05, y: 0.1 },
+    leftHip:       { x: 0.15 },
+    leftKnee:      { x: 0.55 },
+    rightHip:      { x: 0.1 },
+    rightKnee:     { x: 0.5 },
+    chest:         { x: 0.08, y: 0.1 },
   },
   walk: {
     // Dynamic — computed per frame based on walk cycle
   },
   punch: [
-    { t: 0.0, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 } },
-    { t: 0.08, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 } },
-    { t: 0.22, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 } },
-    { t: 0.35, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 } },
+    { t: 0.0, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 },
+              leftHip: { x: 0.15 }, leftKnee: { x: 0.55 }, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 } },
+    { t: 0.08, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 },
+              leftHip: { x: 0.2 }, leftKnee: { x: 0.6 }, rightHip: { x: 0.15 }, rightKnee: { x: 0.55 } },
+    { t: 0.22, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 },
+              leftHip: { x: 0.2 }, leftKnee: { x: 0.6 }, rightHip: { x: 0.15 }, rightKnee: { x: 0.55 } },
+    { t: 0.35, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 },
+              leftHip: { x: 0.15 }, leftKnee: { x: 0.55 }, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 } },
   ],
   kick: [
-    { t: 0.0, rightHip: { x: -0.15 }, rightKnee: { x: 0.3 } },
-    { t: 0.1, rightHip: { x: -0.8 }, rightKnee: { x: 0.8 } },
-    { t: 0.2, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 } },
-    { t: 0.35, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 } },
-    { t: 0.5, rightHip: { x: -0.15 }, rightKnee: { x: 0.3 } },
+    { t: 0.0, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 }, leftHip: { x: 0.15 }, leftKnee: { x: 0.55 } },
+    { t: 0.1, rightHip: { x: -0.8 }, rightKnee: { x: 0.8 }, leftHip: { x: 0.25 }, leftKnee: { x: 0.65 } },
+    { t: 0.2, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: 0.3 }, leftKnee: { x: 0.75 } },
+    { t: 0.35, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: 0.3 }, leftKnee: { x: 0.75 } },
+    { t: 0.5, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 }, leftHip: { x: 0.15 }, leftKnee: { x: 0.55 } },
   ],
   block: {
     leftShoulder:  { x: -1.2, z: 0.6 },
     leftElbow:     { x: -1.5 },
     rightShoulder: { x: -1.2, z: -0.6 },
     rightElbow:    { x: -1.5 },
-    chest:         { x: 0.1 },
+    leftHip: { x: 0.2 }, leftKnee: { x: 0.6 },
+    rightHip: { x: 0.15 }, rightKnee: { x: 0.55 },
+    chest:         { x: 0.12 },
   },
   hitReact: {
     chest: { x: 0.25 },
@@ -504,6 +511,8 @@ const POSES = {
     rightShoulder: { x: 0.3, z: -0.3 },
     leftElbow: { x: -0.2 },
     rightElbow: { x: -0.2 },
+    leftHip: { x: 0.15 }, leftKnee: { x: 0.55 },
+    rightHip: { x: 0.1 }, rightKnee: { x: 0.5 },
   },
   victory: {
     leftShoulder:  { x: -2.8, z: 0.3 },
@@ -613,7 +622,7 @@ function updateAnimation(fighter, dt) {
     }
     // Lower hips
     const defeatY = POSES.defeat.hips?.posY || 0;
-    parts.hips.position.y = lerpAngle(parts.hips.position.y, 0.95 + defeatY, 5 * dt);
+    parts.hips.position.y = lerpAngle(parts.hips.position.y, HIPS_HEIGHT + defeatY, 5 * dt);
   } else {
     // Idle or walking
     const isMoving = Math.abs(fighter.velocity.x) > 0.5;
@@ -639,9 +648,9 @@ function updateAnimation(fighter, dt) {
   // Apply idle bob
   if (anim.currentAnim === 'idle' || anim.currentAnim === 'block') {
     const bob = Math.sin(time * 3) * 0.02;
-    parts.hips.position.y = lerpAngle(parts.hips.position.y, 0.95 + bob, 8 * dt);
+    parts.hips.position.y = lerpAngle(parts.hips.position.y, HIPS_HEIGHT + bob, 8 * dt);
   } else if (anim.currentAnim !== 'defeat') {
-    parts.hips.position.y = lerpAngle(parts.hips.position.y, 0.95, 8 * dt);
+    parts.hips.position.y = lerpAngle(parts.hips.position.y, HIPS_HEIGHT, 8 * dt);
   }
 
   // Lerp all joints
@@ -1081,54 +1090,59 @@ function updateFacing(fighter, opponent) {
 // ════════════════════════════════════════════
 
 // Particle pool — pre-allocate materials to avoid GC on mobile
-const particles = [];
 const particleGeo = new THREE.SphereGeometry(0.04, 6, 4);
-const _pVel = new THREE.Vector3(); // reusable temp vector
-const PARTICLE_COUNT = isTouchDevice ? 6 : 12;
+const PARTICLE_COUNT = isTouchDevice ? 5 : 12;
+const PARTICLE_POOL_SIZE = isTouchDevice ? 20 : 48;
 
-// Pre-allocate shared materials for common particle colors
-const particleMats = {};
-function getParticleMat(color) {
-  if (!particleMats[color]) {
-    particleMats[color] = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
-  }
-  return particleMats[color];
+// Pre-allocate particle pool — no runtime allocation
+const particlePool = [];
+for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+  const mesh = new THREE.Mesh(particleGeo, mat);
+  mesh.visible = false;
+  scene.add(mesh);
+  particlePool.push({
+    mesh, active: false, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0
+  });
 }
 
 function spawnParticles(x, y, z, color) {
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    // Each particle needs its own material instance for independent opacity
-    const mat = getParticleMat(color).clone();
-    const mesh = new THREE.Mesh(particleGeo, mat);
-    mesh.position.set(x, y, z);
-    scene.add(mesh);
-    particles.push({
-      mesh,
-      vx: (Math.random() - 0.5) * 6,
-      vy: Math.random() * 4 + 1,
-      vz: (Math.random() - 0.5) * 3,
-      life: 0.4 + Math.random() * 0.3,
-      maxLife: 0.4 + Math.random() * 0.3,
-    });
+  let spawned = 0;
+  for (let i = 0; i < PARTICLE_POOL_SIZE && spawned < PARTICLE_COUNT; i++) {
+    const p = particlePool[i];
+    if (p.active) continue;
+    p.active = true;
+    p.mesh.visible = true;
+    p.mesh.material.color.setHex(color);
+    p.mesh.material.opacity = 1;
+    p.mesh.position.set(x, y, z);
+    p.mesh.scale.setScalar(1);
+    p.vx = (Math.random() - 0.5) * 6;
+    p.vy = Math.random() * 4 + 1;
+    p.vz = (Math.random() - 0.5) * 3;
+    p.life = 0.4 + Math.random() * 0.3;
+    p.maxLife = p.life;
+    spawned++;
   }
 }
 
 function updateParticles(dt) {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
+  for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+    const p = particlePool[i];
+    if (!p.active) continue;
     p.life -= dt;
+    if (p.life <= 0) {
+      p.active = false;
+      p.mesh.visible = false;
+      continue;
+    }
     p.vy -= 12 * dt;
     p.mesh.position.x += p.vx * dt;
     p.mesh.position.y += p.vy * dt;
     p.mesh.position.z += p.vz * dt;
-    const ratio = Math.max(0, p.life / p.maxLife);
+    const ratio = p.life / p.maxLife;
     p.mesh.material.opacity = ratio;
     p.mesh.scale.setScalar(ratio);
-    if (p.life <= 0) {
-      scene.remove(p.mesh);
-      p.mesh.material.dispose();
-      particles.splice(i, 1);
-    }
   }
 }
 
@@ -1217,7 +1231,7 @@ function playPunchSample(pitchRate, volume) {
 
 // Footstep system — noise buffer created once to avoid GC pressure on mobile
 const footstepState = { player: 0, ai: 0 };
-const FOOTSTEP_INTERVAL = 0.25;
+const FOOTSTEP_INTERVAL = isTouchDevice ? 0.35 : 0.25;
 let footstepNoiseBuf = null;
 
 function initFootstepBuffer() {
@@ -1236,32 +1250,43 @@ function playFootstep() {
   if (!footstepNoiseBuf) initFootstepBuffer();
   const now = audioCtx.currentTime;
 
-  const osc = audioCtx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(80 + Math.random() * 40, now);
-  osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
-  const oscGain = audioCtx.createGain();
-  oscGain.gain.setValueAtTime(0.5, now);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-  osc.connect(oscGain);
+  if (isTouchDevice) {
+    // Mobile: single noise burst only — minimal audio nodes
+    const src = audioCtx.createBufferSource();
+    src.buffer = footstepNoiseBuf;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    src.connect(gain).connect(audioCtx.destination);
+    src.start(now); src.stop(now + 0.06);
+  } else {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80 + Math.random() * 40, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
+    const oscGain = audioCtx.createGain();
+    oscGain.gain.setValueAtTime(0.5, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(oscGain);
 
-  const noiseSrc = audioCtx.createBufferSource();
-  noiseSrc.buffer = footstepNoiseBuf;
-  const filt = audioCtx.createBiquadFilter();
-  filt.type = 'lowpass';
-  filt.frequency.value = 600;
-  const noiseGain = audioCtx.createGain();
-  noiseGain.gain.value = 0.35;
-  noiseSrc.connect(filt).connect(noiseGain);
+    const noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = footstepNoiseBuf;
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = 600;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = 0.35;
+    noiseSrc.connect(filt).connect(noiseGain);
 
-  const master = audioCtx.createGain();
-  master.gain.value = 0.6;
-  oscGain.connect(master);
-  noiseGain.connect(master);
-  master.connect(audioCtx.destination);
+    const master = audioCtx.createGain();
+    master.gain.value = 0.6;
+    oscGain.connect(master);
+    noiseGain.connect(master);
+    master.connect(audioCtx.destination);
 
-  osc.start(now); osc.stop(now + 0.1);
-  noiseSrc.start(now); noiseSrc.stop(now + 0.06);
+    osc.start(now); osc.stop(now + 0.1);
+    noiseSrc.start(now); noiseSrc.stop(now + 0.06);
+  }
 }
 
 function updateFootsteps(fighter, key, dt) {
@@ -1301,20 +1326,6 @@ function playSound(type) {
   else if (type === 'whoosh') {
     // Lighter whoosh using the punch sample at low volume, high pitch
     playPunchSample(2.0, 0.15);
-  }
-  else if (type === 'bell') {
-    // Boxing ring bell: metallic clang with inharmonic overtones
-    [3200, 4100, 5400].forEach((freq) => {
-      const osc = audioCtx.createOscillator();
-      osc.type = 'square'; osc.frequency.value = freq;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = 30;
-      osc.connect(filter).connect(gain).connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 0.8);
-    });
   }
   else if (type === 'victory') {
     [523, 659, 784].forEach((freq, i) => {
@@ -1438,8 +1449,8 @@ function resetFightersForRound() {
   aiPlayer.model.root.position.set(4, 0, 0);
   player.model.root.rotation.y = Math.PI / 2;    // face right
   aiPlayer.model.root.rotation.y = -Math.PI / 2;  // face left
-  player.model.parts.hips.position.y = 0.95;
-  aiPlayer.model.parts.hips.position.y = 0.95;
+  player.model.parts.hips.position.y = HIPS_HEIGHT;
+  aiPlayer.model.parts.hips.position.y = HIPS_HEIGHT;
 }
 
 function changeState(newState) {
