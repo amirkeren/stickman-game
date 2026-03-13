@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Stickman Fighter</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; }
-canvas { display: block; }
+body { overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; touch-action: none; -webkit-user-select: none; user-select: none; }
+canvas { display: block; touch-action: none; }
 
 /* ── UI Overlay ── */
 #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -114,6 +114,26 @@ canvas { display: block; }
   font-size: 22px; color: #fff; margin-top: 30px;
   animation: blink 1.2s ease-in-out infinite;
 }
+
+/* ── Touch Controls Overlay ── */
+#touch-controls {
+  display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 4;
+}
+#touch-controls .zone {
+  position: absolute; top: 0; height: 100%; display: flex; align-items: flex-end;
+  justify-content: center; padding-bottom: 30px;
+}
+#touch-controls .zone-left { left: 0; width: 50%; border-right: 1px solid rgba(255,255,255,0.06); }
+#touch-controls .zone-right { right: 0; width: 50%; }
+#touch-controls .zone-label {
+  color: rgba(255,255,255,0.15); font-size: 14px; font-weight: bold;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.touch-device #touch-controls { display: block; }
+.touch-device .controls-info.keyboard { display: none; }
+.touch-device .controls-info.touch { display: block !important; }
+.controls-info.touch { display: none; color: #888; font-size: 14px; text-align: center; line-height: 2; margin-top: 40px; }
 </style>
 </head>
 <body>
@@ -123,13 +143,17 @@ canvas { display: block; }
   <div id="start-screen">
     <h1>STICKMAN FIGHTER</h1>
     <div class="subtitle">3D Fighting Game</div>
-    <div class="prompt">Press ENTER to Start</div>
-    <div class="controls-info">
+    <div class="prompt" id="start-prompt">Press ENTER to Start</div>
+    <div class="controls-info keyboard">
       <span>A</span> <span>D</span> Move &nbsp;&nbsp;
       <span>W</span> Jump &nbsp;&nbsp;
       <span>J</span> Punch &nbsp;&nbsp;
       <span>K</span> Kick &nbsp;&nbsp;
       <span>L</span> Block
+    </div>
+    <div class="controls-info touch">
+      Left side: drag to move &nbsp;&nbsp; Right side: tap = punch, hold = kick<br>
+      Swipe up on right = jump &nbsp;&nbsp; Two fingers = block
     </div>
   </div>
 
@@ -156,7 +180,13 @@ canvas { display: block; }
   <!-- Game Over -->
   <div id="game-over">
     <div class="result" id="game-over-text"></div>
-    <div class="prompt">Press ENTER to Restart</div>
+    <div class="prompt" id="gameover-prompt">Press ENTER to Restart</div>
+  </div>
+
+  <!-- Touch Controls Overlay -->
+  <div id="touch-controls">
+    <div class="zone zone-left"><div class="zone-label">MOVE</div></div>
+    <div class="zone zone-right"><div class="zone-label">ATTACK</div></div>
   </div>
 </div>
 
@@ -637,6 +667,120 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 // ════════════════════════════════════════════
+// TOUCH INPUT
+// ════════════════════════════════════════════
+
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+if (isTouchDevice) {
+  document.body.classList.add('touch-device');
+  document.getElementById('start-prompt').textContent = 'Tap to Start';
+  document.getElementById('gameover-prompt').textContent = 'Tap to Restart';
+}
+
+const touchState = {
+  moveId: null,       // touch identifier for movement (left half)
+  moveStartX: 0,
+  moveDir: 0,
+  attackId: null,     // touch identifier for attack (right half)
+  attackStartTime: 0,
+  attackStartY: 0,
+  blocking: false,
+  pendingPunch: false,
+  pendingKick: false,
+  pendingJump: false,
+};
+
+const TOUCH_MOVE_THRESHOLD = 15;  // px drag to start moving
+const TOUCH_KICK_THRESHOLD = 200; // ms hold to kick instead of punch
+const TOUCH_SWIPE_UP_THRESHOLD = 50; // px upward swipe to jump
+
+function getTouchHalf(touch) {
+  return touch.clientX < window.innerWidth / 2 ? 'left' : 'right';
+}
+
+window.addEventListener('touchstart', e => {
+  e.preventDefault();
+  ensureAudio();
+
+  // Two or more fingers anywhere = block
+  if (e.touches.length >= 2) {
+    touchState.blocking = true;
+    return;
+  }
+
+  for (const touch of e.changedTouches) {
+    const half = getTouchHalf(touch);
+    if (half === 'left' && touchState.moveId === null) {
+      touchState.moveId = touch.identifier;
+      touchState.moveStartX = touch.clientX;
+      touchState.moveDir = 0;
+    } else if (half === 'right' && touchState.attackId === null) {
+      touchState.attackId = touch.identifier;
+      touchState.attackStartTime = performance.now();
+      touchState.attackStartY = touch.clientY;
+    }
+  }
+
+  // Handle menu/game-over tap
+  if (gameState.current === 'MENU' || gameState.current === 'GAME_OVER') {
+    handleEnter();
+  }
+}, { passive: false });
+
+window.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const touch of e.changedTouches) {
+    if (touch.identifier === touchState.moveId) {
+      const dx = touch.clientX - touchState.moveStartX;
+      if (Math.abs(dx) > TOUCH_MOVE_THRESHOLD) {
+        touchState.moveDir = dx > 0 ? 1 : -1;
+      } else {
+        touchState.moveDir = 0;
+      }
+    }
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', e => {
+  e.preventDefault();
+
+  // Check if blocking should stop
+  if (e.touches.length < 2) {
+    touchState.blocking = false;
+  }
+
+  for (const touch of e.changedTouches) {
+    if (touch.identifier === touchState.moveId) {
+      touchState.moveId = null;
+      touchState.moveDir = 0;
+    }
+    if (touch.identifier === touchState.attackId) {
+      const dt = performance.now() - touchState.attackStartTime;
+      const dy = touch.clientY - touchState.attackStartY;
+
+      if (dy < -TOUCH_SWIPE_UP_THRESHOLD) {
+        // Swipe up = jump
+        touchState.pendingJump = true;
+      } else if (dt >= TOUCH_KICK_THRESHOLD) {
+        // Long press = kick
+        touchState.pendingKick = true;
+      } else {
+        // Quick tap = punch
+        touchState.pendingPunch = true;
+      }
+      touchState.attackId = null;
+    }
+  }
+}, { passive: false });
+
+window.addEventListener('touchcancel', e => {
+  touchState.moveId = null;
+  touchState.moveDir = 0;
+  touchState.attackId = null;
+  touchState.blocking = false;
+});
+
+// ════════════════════════════════════════════
 // FIGHTER STATE
 // ════════════════════════════════════════════
 
@@ -829,14 +973,15 @@ function updateAI(ai, player, dt) {
 function updatePlayerInput(player) {
   if (player.isStunned) return;
 
-  // Movement
+  // Movement (keyboard + touch)
   let moveDir = 0;
   if (keys['KeyA'] || keys['ArrowLeft']) moveDir -= 1;
   if (keys['KeyD'] || keys['ArrowRight']) moveDir += 1;
+  if (touchState.moveDir !== 0) moveDir = touchState.moveDir;
 
-  // Block
+  // Block (keyboard or two-finger touch)
   player.isBlocking = false;
-  if (keys['KeyL'] && !player.anim.isAttacking) {
+  if ((keys['KeyL'] || touchState.blocking) && !player.anim.isAttacking) {
     player.isBlocking = true;
     player.velocity.x *= 0.8;
     if (player.anim.currentAnim !== 'block') player.anim.currentAnim = 'block';
@@ -847,20 +992,23 @@ function updatePlayerInput(player) {
     }
   }
 
-  // Jump
-  if ((keys['KeyW'] || keys['ArrowUp']) && player.isGrounded && !player.anim.isAttacking) {
+  // Jump (keyboard or touch swipe-up)
+  if ((keys['KeyW'] || keys['ArrowUp'] || touchState.pendingJump) && player.isGrounded && !player.anim.isAttacking) {
     player.velocity.y = JUMP_VELOCITY;
     player.isGrounded = false;
+    touchState.pendingJump = false;
   }
 
-  // Attacks
-  if (keys['KeyJ'] && !player.anim.isAttacking && !player.isBlocking) {
+  // Attacks (keyboard or touch)
+  if ((keys['KeyJ'] || touchState.pendingPunch) && !player.anim.isAttacking && !player.isBlocking) {
     startAttack(player, 'punch');
     keys['KeyJ'] = false;
+    touchState.pendingPunch = false;
   }
-  if (keys['KeyK'] && !player.anim.isAttacking && !player.isBlocking) {
+  if ((keys['KeyK'] || touchState.pendingKick) && !player.anim.isAttacking && !player.isBlocking) {
     startAttack(player, 'kick');
     keys['KeyK'] = false;
+    touchState.pendingKick = false;
   }
 }
 
@@ -995,6 +1143,8 @@ const PUNCH_COUNT = 5;
 const bgMusic = new Audio('bgm.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
+bgMusic.muted = true;                    // muted autoplay is allowed by browsers
+bgMusic.play().catch(() => {});           // start playback immediately (silent)
 
 // Pre-load and split punch sounds into 5 separate buffers
 async function loadPunchSounds() {
@@ -1031,7 +1181,8 @@ function ensureAudio() {
     loadPunchSounds();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  // Start background music
+  // Unmute and ensure music is playing
+  bgMusic.muted = false;
   if (bgMusic.paused) {
     bgMusic.play().catch(() => {});
   }
@@ -1304,13 +1455,10 @@ window.addEventListener('keydown', e => {
   if (e.code === 'Enter') handleEnter();
 });
 
-// Try to start music as early as possible — on any user interaction
-['click', 'pointerdown', 'pointerup', 'mousemove', 'touchstart'].forEach(evt => {
+// Unmute music on first real user interaction (click/tap/key)
+['click', 'pointerdown', 'touchstart'].forEach(evt => {
   window.addEventListener(evt, () => ensureAudio(), { once: true });
 });
-
-// Also attempt autoplay immediately (works if browser policy allows it)
-bgMusic.play().catch(() => {});
 
 // ════════════════════════════════════════════
 // CAMERA
