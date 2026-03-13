@@ -924,7 +924,7 @@ function pushApart(a, b) {
 function updateFacing(fighter, opponent) {
   const shouldFaceRight = opponent.position.x > fighter.position.x;
   fighter.facingRight = shouldFaceRight;
-  fighter.model.root.scale.x = shouldFaceRight ? 1 : -1;
+  fighter.model.root.rotation.y = shouldFaceRight ? Math.PI / 2 : -Math.PI / 2;
 }
 
 // ════════════════════════════════════════════
@@ -1261,8 +1261,8 @@ function resetFightersForRound() {
 
   player.model.root.position.set(-4, 0, 0);
   aiPlayer.model.root.position.set(4, 0, 0);
-  player.model.root.scale.x = 1;
-  aiPlayer.model.root.scale.x = -1;
+  player.model.root.rotation.y = Math.PI / 2;    // face right
+  aiPlayer.model.root.rotation.y = -Math.PI / 2;  // face left
   player.model.parts.hips.position.y = 0.95;
   aiPlayer.model.parts.hips.position.y = 0.95;
 }
@@ -1303,7 +1303,14 @@ window.addEventListener('keydown', e => {
   ensureAudio();
   if (e.code === 'Enter') handleEnter();
 });
-window.addEventListener('click', () => { ensureAudio(); }, { once: true });
+
+// Try to start music as early as possible — on any user interaction
+['click', 'pointerdown', 'pointerup', 'mousemove', 'touchstart'].forEach(evt => {
+  window.addEventListener(evt, () => ensureAudio(), { once: true });
+});
+
+// Also attempt autoplay immediately (works if browser policy allows it)
+bgMusic.play().catch(() => {});
 
 // ════════════════════════════════════════════
 // CAMERA
