@@ -217,7 +217,7 @@ const DAMAGE = { punch: 10, kick: 16 };
 const BLOCK_REDUCTION = 0.35;
 const HIT_STUN = 0.35;
 const KNOCKBACK = { punch: 1.5, kick: 2.5 };
-const HIT_RANGE = { punch: 1.8, kick: 2.2 };
+const HIT_RANGE = { punch: 1.2, kick: 1.6 };
 
 const AI_CONFIG = {
   reactionTime: 0.25,
@@ -1469,7 +1469,13 @@ const cameraTarget = { x: 0, y: 2.8, z: 11 };
 function updateCamera(p1, p2, dt) {
   const midX = (p1.position.x + p2.position.x) / 2;
   const dist = Math.abs(p1.position.x - p2.position.x);
-  const targetZ = Math.max(9, 10 + dist * 0.3);
+
+  // Calculate min Z to keep both fighters in frame on any aspect ratio
+  const halfFovRad = (camera.fov / 2) * Math.PI / 180;
+  const hHalfFov = Math.atan(Math.tan(halfFovRad) * camera.aspect);
+  const neededHalfWidth = dist / 2 + 1.5;
+  const minZ = neededHalfWidth / Math.tan(hHalfFov);
+  const targetZ = Math.max(minZ, 10 + dist * 0.3);
 
   cameraTarget.x = midX;
   cameraTarget.z = targetZ;
