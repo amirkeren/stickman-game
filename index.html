@@ -212,7 +212,8 @@ const GRAVITY = 28;
 const JUMP_VELOCITY = 10;
 const WALK_SPEED = 4.5;
 const PUSH_APART_DIST = 0.7;
-const HIPS_HEIGHT = 0.82;  // crouched fighting stance (was 0.95 upright)
+const HIPS_HEIGHT = 0.31;  // deep crouched fighting stance
+const GROUND_Y = 0.62;    // raise model so feet rest on floor
 const ROUND_TIME = 60;
 const ROUNDS_TO_WIN = 2;
 
@@ -341,6 +342,7 @@ function createStickman(color) {
   }
 
   const root = new THREE.Group();
+  root.rotation.order = 'ZYX';  // Y=facing applied first, Z=fall applied after
 
   // Hips
   const hips = new THREE.Group();
@@ -470,49 +472,49 @@ const POSES = {
     leftElbow:     { x: -0.5 },
     rightShoulder: { x: -0.6, z: -0.5 },
     rightElbow:    { x: -1.2 },
-    leftHip:       { x: 0.15 },
-    leftKnee:      { x: 0.55 },
-    rightHip:      { x: 0.1 },
-    rightKnee:     { x: 0.5 },
-    chest:         { x: 0.08, y: 0.1 },
+    leftHip:       { x: -0.5 },
+    leftKnee:      { x: 0.39 },
+    rightHip:      { x: -0.45 },
+    rightKnee:     { x: 0.39 },
+    chest:         { x: 0, y: 0.1 },
   },
   walk: {
     // Dynamic — computed per frame based on walk cycle
   },
   punch: [
     { t: 0.0, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 },
-              leftHip: { x: 0.15 }, leftKnee: { x: 0.55 }, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 } },
+              leftHip: { x: -0.5 }, leftKnee: { x: 0.21 }, rightHip: { x: -0.45 }, rightKnee: { x: 0.21 } },
     { t: 0.08, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 },
-              leftHip: { x: 0.2 }, leftKnee: { x: 0.6 }, rightHip: { x: 0.15 }, rightKnee: { x: 0.55 } },
+              leftHip: { x: -0.55 }, leftKnee: { x: 0.27 }, rightHip: { x: -0.5 }, rightKnee: { x: 0.27 } },
     { t: 0.22, rightShoulder: { x: -1.55, z: -0.1 }, rightElbow: { x: -0.1 },
-              leftHip: { x: 0.2 }, leftKnee: { x: 0.6 }, rightHip: { x: 0.15 }, rightKnee: { x: 0.55 } },
+              leftHip: { x: -0.55 }, leftKnee: { x: 0.27 }, rightHip: { x: -0.5 }, rightKnee: { x: 0.27 } },
     { t: 0.35, rightShoulder: { x: -0.6, z: -0.5 }, rightElbow: { x: -1.2 },
-              leftHip: { x: 0.15 }, leftKnee: { x: 0.55 }, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 } },
+              leftHip: { x: -0.5 }, leftKnee: { x: 0.21 }, rightHip: { x: -0.45 }, rightKnee: { x: 0.21 } },
   ],
   kick: [
-    { t: 0.0, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 }, leftHip: { x: 0.15 }, leftKnee: { x: 0.55 } },
-    { t: 0.1, rightHip: { x: -0.8 }, rightKnee: { x: 0.8 }, leftHip: { x: 0.25 }, leftKnee: { x: 0.65 } },
-    { t: 0.2, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: 0.3 }, leftKnee: { x: 0.75 } },
-    { t: 0.35, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: 0.3 }, leftKnee: { x: 0.75 } },
-    { t: 0.5, rightHip: { x: 0.1 }, rightKnee: { x: 0.5 }, leftHip: { x: 0.15 }, leftKnee: { x: 0.55 } },
+    { t: 0.0, rightHip: { x: -0.45 }, rightKnee: { x: 0.21 }, leftHip: { x: -0.5 }, leftKnee: { x: 0.21 } },
+    { t: 0.1, rightHip: { x: -0.8 }, rightKnee: { x: 0.8 }, leftHip: { x: -0.55 }, leftKnee: { x: 0.27 } },
+    { t: 0.2, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: -0.6 }, leftKnee: { x: 0.3 } },
+    { t: 0.35, rightHip: { x: -1.4 }, rightKnee: { x: 0.05 }, leftHip: { x: -0.6 }, leftKnee: { x: 0.3 } },
+    { t: 0.5, rightHip: { x: -0.45 }, rightKnee: { x: 0.21 }, leftHip: { x: -0.5 }, leftKnee: { x: 0.21 } },
   ],
   block: {
     leftShoulder:  { x: -1.2, z: 0.6 },
     leftElbow:     { x: -1.5 },
     rightShoulder: { x: -1.2, z: -0.6 },
     rightElbow:    { x: -1.5 },
-    leftHip: { x: 0.2 }, leftKnee: { x: 0.6 },
-    rightHip: { x: 0.15 }, rightKnee: { x: 0.55 },
-    chest:         { x: 0.12 },
+    leftHip: { x: -0.5 }, leftKnee: { x: 0.21 },
+    rightHip: { x: -0.45 }, rightKnee: { x: 0.21 },
+    chest:         { x: 0 },
   },
   hitReact: {
-    chest: { x: 0.25 },
+    chest: { x: 0.15 },
     leftShoulder: { x: 0.3, z: 0.3 },
     rightShoulder: { x: 0.3, z: -0.3 },
     leftElbow: { x: -0.2 },
     rightElbow: { x: -0.2 },
-    leftHip: { x: 0.15 }, leftKnee: { x: 0.55 },
-    rightHip: { x: 0.1 }, rightKnee: { x: 0.5 },
+    leftHip: { x: -0.5 }, leftKnee: { x: 0.21 },
+    rightHip: { x: -0.45 }, rightKnee: { x: 0.21 },
   },
   victory: {
     leftShoulder:  { x: -2.8, z: 0.3 },
@@ -522,15 +524,15 @@ const POSES = {
     chest:         { x: -0.15 },
   },
   defeat: {
-    leftShoulder:  { x: 0.3, z: 0.2 },
-    leftElbow:     { x: -0.1 },
-    rightShoulder: { x: 0.3, z: -0.2 },
-    rightElbow:    { x: -0.1 },
-    leftHip:       { x: 0.3 },
-    leftKnee:      { x: 0.5 },
-    rightHip:      { x: 0.3 },
-    rightKnee:     { x: 0.5 },
-    chest:         { x: 0.4 },
+    leftShoulder:  { x: -0.5, z: 1.2 },
+    leftElbow:     { x: -0.3 },
+    rightShoulder: { x: -0.5, z: -1.2 },
+    rightElbow:    { x: -0.3 },
+    leftHip:       { x: 0.05 },
+    leftKnee:      { x: 0.1 },
+    rightHip:      { x: 0.05 },
+    rightKnee:     { x: 0.1 },
+    chest:         { x: 0.1 },
     hips:          { posY: -0.4 },
   },
 };
@@ -620,7 +622,12 @@ function updateAnimation(fighter, dt) {
     for (const j of JOINT_NAMES) {
       targets[j] = POSES.defeat[j] || POSES.idle[j] || { x: 0, y: 0, z: 0 };
     }
-    // Lower hips
+    // Fall backward: tilt root on Z (since Y rotation swaps axes), drop to ground
+    const root = fighter.model.root;
+    const fallTarget = fighter.facingRight ? Math.PI / 2 : -Math.PI / 2;
+    root.rotation.z = lerpAngle(root.rotation.z, fallTarget, 4 * dt);
+    fighter.position.y = lerpAngle(fighter.position.y, 0.15, 4 * dt);
+    root.position.y = fighter.position.y;
     const defeatY = POSES.defeat.hips?.posY || 0;
     parts.hips.position.y = lerpAngle(parts.hips.position.y, HIPS_HEIGHT + defeatY, 5 * dt);
   } else {
@@ -1053,8 +1060,8 @@ function updatePhysics(fighter, dt) {
   if (!fighter.isGrounded) {
     fighter.velocity.y -= GRAVITY * dt;
     fighter.position.y += fighter.velocity.y * dt;
-    if (fighter.position.y <= 0) {
-      fighter.position.y = 0;
+    if (fighter.position.y <= GROUND_Y) {
+      fighter.position.y = GROUND_Y;
       fighter.velocity.y = 0;
       fighter.isGrounded = true;
     }
@@ -1420,7 +1427,7 @@ function initFighters() {
 function resetFightersForRound() {
   player.health = 100;
   player.position.x = -4;
-  player.position.y = 0;
+  player.position.y = GROUND_Y;
   player.velocity.x = 0;
   player.velocity.y = 0;
   player.isGrounded = true;
@@ -1430,7 +1437,7 @@ function resetFightersForRound() {
 
   aiPlayer.health = 100;
   aiPlayer.position.x = 4;
-  aiPlayer.position.y = 0;
+  aiPlayer.position.y = GROUND_Y;
   aiPlayer.velocity.x = 0;
   aiPlayer.velocity.y = 0;
   aiPlayer.isGrounded = true;
@@ -1445,10 +1452,10 @@ function resetFightersForRound() {
 
   gameState.roundTimer = ROUND_TIME;
 
-  player.model.root.position.set(-4, 0, 0);
-  aiPlayer.model.root.position.set(4, 0, 0);
-  player.model.root.rotation.y = Math.PI / 2;    // face right
-  aiPlayer.model.root.rotation.y = -Math.PI / 2;  // face left
+  player.model.root.position.set(-4, GROUND_Y, 0);
+  aiPlayer.model.root.position.set(4, GROUND_Y, 0);
+  player.model.root.rotation.set(0, Math.PI / 2, 0);    // face right, upright
+  aiPlayer.model.root.rotation.set(0, -Math.PI / 2, 0);  // face left, upright
   player.model.parts.hips.position.y = HIPS_HEIGHT;
   aiPlayer.model.parts.hips.position.y = HIPS_HEIGHT;
 }
