@@ -217,7 +217,7 @@ const DAMAGE = { punch: 10, kick: 16 };
 const BLOCK_REDUCTION = 0.35;
 const HIT_STUN = 0.35;
 const KNOCKBACK = { punch: 1.5, kick: 2.5 };
-const HIT_RANGE = { punch: 1.2, kick: 1.6 };
+const HIT_RANGE = { punch: 0.9, kick: 1.2 };
 
 const AI_CONFIG = {
   reactionTime: 0.25,
@@ -235,7 +235,7 @@ const AI_CONFIG = {
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a0a05);
-scene.fog = new THREE.Fog(0x1a0a05, 15, 30);
+scene.fog = new THREE.Fog(0x1a0a05, 25, 55);
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 2.8, 11);
@@ -1282,14 +1282,17 @@ function playSound(type) {
     playPunchSample(2.0, 0.15);
   }
   else if (type === 'bell') {
-    [800, 1200].forEach((freq, i) => {
+    // Boxing ring bell: metallic clang with inharmonic overtones
+    [3200, 4100, 5400].forEach((freq) => {
       const osc = audioCtx.createOscillator();
-      osc.type = 'sine'; osc.frequency.value = freq;
+      osc.type = 'square'; osc.frequency.value = freq;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.2, now + i * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.3);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = 30;
+      osc.connect(filter).connect(gain).connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.8);
     });
   }
   else if (type === 'victory') {
