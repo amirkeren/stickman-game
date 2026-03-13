@@ -269,7 +269,7 @@ dirLight.shadow.camera.far = 25;
 scene.add(dirLight);
 
 // Arena base (hidden beneath textured floor)
-const arenaGeo = new THREE.BoxGeometry(22, 0.5, 10);
+const arenaGeo = new THREE.BoxGeometry(50, 0.5, 30);
 const arenaMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
 const arena = new THREE.Mesh(arenaGeo, arenaMat);
 arena.position.y = -0.25;
@@ -281,7 +281,7 @@ const floorTexture = new THREE.TextureLoader().load('bg.png');
 floorTexture.colorSpace = THREE.SRGBColorSpace;
 floorTexture.offset.set(0, 0);
 floorTexture.repeat.set(1, 0.35);
-const floorGeo = new THREE.PlaneGeometry(22, 10);
+const floorGeo = new THREE.PlaneGeometry(50, 30);
 const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.7 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
@@ -294,10 +294,10 @@ const bgTexture = new THREE.TextureLoader().load('bg.png');
 bgTexture.colorSpace = THREE.SRGBColorSpace;
 bgTexture.offset.set(0, 0.3);
 bgTexture.repeat.set(1, 0.7);
-const backdropGeo = new THREE.PlaneGeometry(30, 12);
+const backdropGeo = new THREE.PlaneGeometry(50, 16);
 const backdropMat = new THREE.MeshBasicMaterial({ map: bgTexture, side: THREE.DoubleSide });
 const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
-backdrop.position.set(0, 6, -5.5);
+backdrop.position.set(0, 7, -5.5);
 scene.add(backdrop);
 
 // Resize
